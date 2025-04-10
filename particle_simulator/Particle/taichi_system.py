@@ -1,6 +1,6 @@
 import numpy as np
 import taichi as ti
-from ..physics.force_laws import SpringForceLaw
+from ..Physics.force_law import SpringForceLaw
 
 @ti.data_oriented
 class TaichiSystem:

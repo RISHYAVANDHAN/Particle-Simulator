@@ -126,3 +126,66 @@ class PlaneConstraint(Constraint):
                     v_new[particle.DOF] = vel - (1 + self.restitution) * normal_vel * self.normal
         
         return r_new, v_new
+
+class SphereConstraint(Constraint):
+    """
+    Constraint that restricts particles to remain within or on the surface of a sphere.
+    
+    Attributes:
+        center (np.ndarray): Center of the sphere
+        radius (float): Radius of the sphere
+        particles (list): List of particles to constrain
+        restitution (float): Coefficient of restitution for bounces
+    """
+    def __init__(self, center, radius, particles, restitution=0.8):
+        """
+        Initialize a sphere constraint.
+        
+        Args:
+            center (np.ndarray): Center of the sphere
+            radius (float): Radius of the sphere
+            particles (list): List of particles to constrain
+            restitution (float, optional): Coefficient of restitution. Defaults to 0.8.
+        """
+        self.center = np.array(center, dtype=np.float32)
+        self.radius = radius
+        self.particles = particles
+        self.restitution = restitution
+
+    def apply(self, t, r, v):
+        """
+        Apply the sphere constraint to the position and velocity vectors.
+        
+        Args:
+            t (float): Current time
+            r (np.ndarray): Position vector to modify
+            v (np.ndarray): Velocity vector to modify
+            
+        Returns:
+            tuple: Modified position and velocity vectors
+        """
+        # Make copies to avoid modifying originals
+        r_new = r.copy()
+        v_new = v.copy()
+        
+        for particle in self.particles:
+            # Get particle position and velocity
+            pos = r[particle.DOF]
+            vel = v[particle.DOF]
+            
+            # Calculate displacement from sphere center
+            displacement = pos - self.center
+            distance = np.linalg.norm(displacement)
+            
+            # If particle is outside the sphere
+            if distance > self.radius:
+                # Project back onto the sphere's surface
+                r_new[particle.DOF] = self.center + displacement * (self.radius / distance)
+                
+                # Reflect velocity with restitution
+                normal = displacement / distance  # Normalized vector pointing outward
+                normal_vel = np.dot(vel, normal)
+                if normal_vel > 0:  # Only reflect if moving outward
+                    v_new[particle.DOF] = vel - (1 + self.restitution) * normal_vel * normal
+        
+        return r_new, v_new

@@ -2,6 +2,26 @@ import numpy as np
 import taichi as ti
 from Physics import SpringForceLaw
 
+def to_taichi_system(system):
+    """
+    Convert a System object to a Taichi-compatible system.
+
+    Args:
+        system (System): The system to convert.
+
+    Returns:
+        TaichiSystem: A Taichi-compatible version of the system.
+    """
+    from particle_simulator.Particle.taichi_system import TaichiSystem
+    
+    # Create a TaichiSystem from the given system
+    taichi_system = TaichiSystem(
+        particles=system.particles,
+        interactions=system.interactions,
+        gravity=system.gravity
+    )
+    return taichi_system
+
 def extract_trajectory_for_particle(r, particle):
     """
     Extract trajectory for a specific particle from global position array.

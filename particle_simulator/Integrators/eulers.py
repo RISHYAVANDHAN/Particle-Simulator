@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import fsolve
-from .base_integrator import Integrator
+from .base_integrators import Integrator
 
 class ExplicitEulerIntegrator(Integrator):
     """
@@ -11,6 +11,9 @@ class ExplicitEulerIntegrator(Integrator):
     r(t+dt) = r(t) + v(t) * dt
     """
     
+    def __init__(self, dt):
+        self.dt = dt
+
     def step(self, t, r, v, system):
         """
         Advance the system by one time step using explicit Euler.
@@ -36,6 +39,37 @@ class ExplicitEulerIntegrator(Integrator):
         
         # Return new state
         return t + self.dt, r_new, v_new
+
+    def integrate(self, system, h, tf):
+        """
+        Perform explicit Euler integration.
+
+        Args:
+            system (System): The system to integrate.
+            h (float): Time step size.
+            tf (float): Final simulation time.
+
+        Returns:
+            tuple: (time array, position array, velocity array)
+        """
+        t0 = system.t0
+        n_steps = int((tf - t0) / h) + 1
+
+        t = np.linspace(t0, tf, n_steps)
+        r = np.zeros((n_steps, system.nDOF))
+        v = np.zeros((n_steps, system.nDOF))
+
+        # Initialize positions and velocities
+        r[0] = system.r0
+        v[0] = system.v0
+
+        # Perform integration
+        for step in range(1, n_steps):
+            F = system.F(t[step - 1], r[step - 1], v[step - 1])
+            v[step] = v[step - 1] + h * F / system.m
+            r[step] = r[step - 1] + h * v[step - 1]
+
+        return t, r, v
 
 class SymplecticEulerIntegrator(Integrator):
     """

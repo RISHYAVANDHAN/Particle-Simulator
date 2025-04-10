@@ -41,60 +41,13 @@ class ForceLaw:
         return [self.get_type_id(), 0, 0, 0, 0]
 
 class SpringForceLaw(ForceLaw):
-    """
-    Hooke's law spring force.
-    
-    F = -k(l - l0) - c*l_dot
-    
-    Attributes:
-        k (float): Spring stiffness
-        l0 (float): Rest length
-        damping (float): Damping coefficient
-    """
-    def __init__(self, stiffness, rest_length, damping=0.0):
-        """
-        Initialize a spring force law.
-        
-        Args:
-            stiffness (float): Spring stiffness constant
-            rest_length (float): Rest length of spring
-            damping (float, optional): Damping coefficient. Defaults to 0.0.
-        """
-        self.k = stiffness
+    def __init__(self, stiffness, rest_length):
+        self.c = stiffness
         self.l0 = rest_length
-        self.damping = damping
-    
+
     def la(self, t, l, l_dot):
-        """
-        Compute spring force.
-        
-        Args:
-            t (float): Current time (not used for basic spring)
-            l (float): Current length
-            l_dot (float): Current length derivative
-        
-        Returns:
-            float: Force magnitude
-        """
-        return -self.k * (l - self.l0) - self.damping * l_dot
-    
-    def get_type_id(self):
-        """
-        Get the type ID for Taichi acceleration.
-        
-        Returns:
-            int: Force law type ID (0 for spring)
-        """
-        return 0
-    
-    def get_parameters(self):
-        """
-        Get spring parameters for Taichi acceleration.
-        
-        Returns:
-            list: [type_id, stiffness, rest_length, damping, 0]
-        """
-        return [self.get_type_id(), self.k, self.l0, self.damping, 0.0]
+        """Calculate spring force per unit length."""
+        return -self.c * (l - self.l0)
 
 class NonlinearSpringForceLaw(ForceLaw):
     """
@@ -211,3 +164,12 @@ class TimeDependentSpringForceLaw(ForceLaw):
         
         # Calculate force with current stiffness
         return -current_k * (l - self.l0) - self.damping * l_dot
+
+class Spring:
+    def __init__(self, stiffness, undeformed_length):
+        self.c = stiffness
+        self.l0 = undeformed_length
+
+    def la(self, t, l, l_dot):
+        """Calculate spring force per unit length."""
+        return -self.c * (l - self.l0)

@@ -8,6 +8,8 @@ setup(
     install_requires=[
         "taichi",
         "numpy",
+        "matplotlib",
+        "scipy"
         # Add other dependencies as needed
     ],
     description="Particle physics simulation package",

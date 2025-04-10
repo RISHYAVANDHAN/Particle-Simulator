@@ -2,94 +2,109 @@ import numpy as np
 from numpy.linalg import norm
 
 class TwoPointInteraction:
-    """
-    Represents an interaction between two particles, governed by a force law.
-    
-    Attributes:
-        particle1 (Particle): First particle in the interaction
-        particle2 (Particle): Second particle in the interaction
-        force_law (ForceLaw): Force law governing the interaction
-        DOF (np.ndarray): Combined degrees of freedom for both particles
-    """
     def __init__(self, particle1, particle2, force_law):
         """
-        Initialize a two-point interaction between particles.
-        
+        Initialize the interaction.
+
         Args:
-            particle1 (Particle): First particle
-            particle2 (Particle): Second particle
-            force_law (ForceLaw): Force law governing the interaction
+            particle1 (Particle): The first particle in the interaction.
+            particle2 (Particle): The second particle in the interaction.
+            force_law (ForceLaw): The force law governing the interaction (e.g., SpringForceLaw).
         """
         self.particle1 = particle1
         self.particle2 = particle2
         self.force_law = force_law
-        # Combine DOFs from both particles
-        self.DOF = None
-        if particle1.DOF is not None and particle2.DOF is not None:
-            self.DOF = np.concatenate([particle1.DOF, particle2.DOF])
-    
+        self.DOF = np.concatenate([particle1.DOF, particle2.DOF])
+
     def l(self, r):
         """
-        Calculate the distance between the two particles.
-        
+        Calculate the length of the spring.
+
         Args:
-            r (np.ndarray): Global position vector
-            
+            r (np.ndarray): Array of positions with shape (n_particles, 3).
+
         Returns:
-            float: Distance between particles
+            float: The length of the spring.
         """
-        r12 = self.particle2.slice(r) - self.particle1.slice(r)
-        return norm(r12)
-    
+        r12 = r[self.particle2.DOF // 3] - r[self.particle1.DOF // 3]
+        return np.linalg.norm(r12)
+
     def n(self, r):
         """
-        Calculate the unit normal vector pointing from particle1 to particle2.
-        
+        Calculate the unit vector along the spring.
+
         Args:
-            r (np.ndarray): Global position vector
-            
+            r (np.ndarray): Array of positions with shape (n_particles, 3).
+
         Returns:
-            np.ndarray: Unit normal vector
+            np.ndarray: Unit vector along the spring.
         """
         r12 = self.particle2.slice(r) - self.particle1.slice(r)
-        length = norm(r12)
-        if length < 1e-10:  # Avoid division by zero
-            return np.zeros(3)
-        return r12 / length
+        return r12 / norm(r12)
 
     def l_dot(self, r, v):
         """
-        Calculate the rate of change of distance between particles.
-        
+        Calculate the rate of change of the spring length.
+
         Args:
-            r (np.ndarray): Global position vector
-            v (np.ndarray): Global velocity vector
-            
+            r (np.ndarray): Array of positions with shape (n_particles, 3).
+            v (np.ndarray): Array of velocities with shape (n_particles, 3).
+
         Returns:
-            float: Rate of change of distance
+            float: Rate of change of the spring length.
         """
         v12 = self.particle2.slice(v) - self.particle1.slice(v)
         return np.dot(self.n(r), v12)
 
-    def F(self, t, r, v):
+    def force(self, t, r, v):
         """
-        Calculate the forces on both particles due to this interaction.
-        
+        Calculate the force exerted by the spring.
+
         Args:
-            t (float): Current time
-            r (np.ndarray): Global position vector
-            v (np.ndarray): Global velocity vector
-            
+            t (float): Current time.
+            r (np.ndarray): Array of positions with shape (n_particles, 3).
+            v (np.ndarray): Array of velocities with shape (n_particles, 3).
+
         Returns:
-            np.ndarray: Force vector for both particles [F1, F2]
+            tuple: Force vectors for the two particles (F1, F2).
         """
-        F = np.zeros(6)  # 3 components for each particle
         l = self.l(r)
         l_dot = self.l_dot(r, v)
         la = self.force_law.la(t, l, l_dot)
         n = self.n(r)
-        
-        # Apply forces in opposite directions
-        F[:3] = -la * n  # Force on particle1
-        F[3:] = la * n   # Force on particle2
+        F1 = -la * n  # Force on particle 1
+        F2 = la * n   # Force on particle 2
+        return F1, F2
+
+
+class System:
+    def __init__(self, particles, interactions):
+        """
+        Initialize the system.
+
+        Args:
+            particles (list): List of Particle objects.
+            interactions (list): List of TwoPointInteraction objects.
+        """
+        self.particles = particles
+        self.interactions = interactions
+        self.F0 = np.zeros((len(particles), 3))
+
+    def F(self, t, r, v):
+        """
+        Compute the global force vector for the system.
+
+        Args:
+            t (float): Current time.
+            r (np.ndarray): Array of positions with shape (n_particles, 3).
+            v (np.ndarray): Array of velocities with shape (n_particles, 3).
+
+        Returns:
+            np.ndarray: Global force vector with shape (n_particles, 3).
+        """
+        F = self.F0.copy()
+        for interaction in self.interactions:
+            F1, F2 = interaction.force(t, r, v)
+            F[self.particles.index(interaction.particle1)] += F1
+            F[self.particles.index(interaction.particle2)] += F2
         return F

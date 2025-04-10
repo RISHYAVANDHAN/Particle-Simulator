@@ -25,37 +25,40 @@ def profile_function(func: Callable) -> Callable:
         return result
     return wrapper
 
-def profile_simulation(system, integrators: Dict[str, Callable], h: float, tf: float, 
-                       metrics: List[str] = ["time", "energy"]) -> Dict[str, Any]:
+def profile_simulation(system, integrators, h, tf, metrics):
     """
-    Profile different integrators on the same system.
-    
+    Profile the simulation for different integrators.
+
     Args:
-        system: The particle system to simulate
-        integrators: Dictionary mapping integrator names to integration functions
-        h: Time step size
-        tf: Final simulation time
-        metrics: List of metrics to track ("time", "energy", "stability")
-        
+        system (System): The system to simulate.
+        integrators (dict): Dictionary of integrators to profile.
+        h (float): Time step size.
+        tf (float): Final simulation time.
+        metrics (list): List of metrics to compute.
+
     Returns:
-        Dict: Performance metrics for each integrator
+        dict: Results for each integrator.
     """
     results = {}
-    
     for name, integrator in integrators.items():
         print(f"Profiling {name}...")
         
-        # Time measurement
+        # Measure execution time
         start_time = time.time()
-        t, r, v = integrator(system, h, tf)
-        execution_time = time.time() - start_time
+        if callable(integrator):
+            t, r, v = integrator(system, h, tf)  # Call the function directly
+        elif hasattr(integrator, "integrate"):
+            t, r, v = integrator.integrate(system, h, tf)  # Call the `integrate` method
+        else:
+            raise TypeError(f"Integrator '{name}' is neither callable nor has an 'integrate' method.")
+        end_time = time.time()
         
         # Store results
         results[name] = {
-            "time": execution_time,
             "t": t,
             "r": r,
-            "v": v
+            "v": v,
+            "time": end_time - start_time  # Store execution time
         }
         
         # Energy calculation if requested
@@ -84,8 +87,8 @@ def profile_simulation(system, integrators: Dict[str, Callable], h: float, tf: f
             results[name]["kinetic_energy"] = KE
             results[name]["potential_energy"] = PE
             results[name]["total_energy"] = TE
-            results[name]["energy_drift"] = (TE[-1] - TE[0]) / TE[0]
-    
+            results[name]["energy_drift"] = (TE[-1] - TE[0]) / (TE[0] if TE[0] != 0 else 1e-10)
+
     return results
 
 def visualize_profiling_results(results: Dict[str, Any], 
