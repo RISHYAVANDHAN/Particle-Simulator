@@ -32,3 +32,8 @@ Desktop.ini
 # Ignore taichi binaries (optional but helpful)
 **/taichi/_lib/**/bin/
 **/taichi/_lib/**/core/
+
+# Keep this file tracked (remove the ignore if you want to share dependencies)
+!requirements.txt
+
+*.egg-info/
