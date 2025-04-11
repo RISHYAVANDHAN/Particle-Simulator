@@ -19,14 +19,17 @@ class TwoPointInteraction:
     def l(self, r):
         """
         Calculate the length of the spring.
-
+        
         Args:
-            r (np.ndarray): Array of positions with shape (n_particles, 3).
-
+            r (np.ndarray): Array of positions
+            
         Returns:
-            float: The length of the spring.
+            float: The length of the spring
         """
-        r12 = r[self.particle2.DOF // 3] - r[self.particle1.DOF // 3]
+        # Get positions of both particles
+        r1 = self.particle1.slice(r)
+        r2 = self.particle2.slice(r)
+        r12 = r2 - r1
         return np.linalg.norm(r12)
 
     def n(self, r):
@@ -45,15 +48,18 @@ class TwoPointInteraction:
     def l_dot(self, r, v):
         """
         Calculate the rate of change of the spring length.
-
+        
         Args:
-            r (np.ndarray): Array of positions with shape (n_particles, 3).
-            v (np.ndarray): Array of velocities with shape (n_particles, 3).
-
+            r (np.ndarray): Array of positions
+            v (np.ndarray): Array of velocities
+            
         Returns:
-            float: Rate of change of the spring length.
+            float: Rate of change of the spring length
         """
-        v12 = self.particle2.slice(v) - self.particle1.slice(v)
+        # Get velocities of both particles
+        v1 = self.particle1.slice(v)
+        v2 = self.particle2.slice(v)
+        v12 = v2 - v1
         return np.dot(self.n(r), v12)
 
     def force(self, t, r, v):

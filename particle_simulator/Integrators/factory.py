@@ -60,9 +60,7 @@ def taichi_integration(system, dt, tf, method="explicit_euler"):
         for i in range(num_particles[None]):  # Use num_particles field
             vel[i] += h * F[i] / mass[i]
             pos[i] += h * vel[i]
-            # Debugging output to track the particle
-            print(f"Step {k}, Particle {i}: Position: {pos[i]}, Velocity: {vel[i]}")
-
+            
     # Run simulation and store results
     t = np.linspace(t0, tf, n_steps)
     r = np.zeros((n_steps, num_particles[None], 3), dtype=np.float32)

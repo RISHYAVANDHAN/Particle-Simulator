@@ -55,18 +55,14 @@ class System:
 
     def Force(self, t, r, v):
         """Calculate forces on all particles."""
-        F = np.zeros((len(self.particles), 3))  # Initialize force array
-
+        F = np.zeros((len(self.particles), 3))
+    
         for interaction in self.interactions:
             F1, F2 = interaction.force(t, r, v)
-            idx1 = self.particles.index(interaction.particle1)
-            idx2 = self.particles.index(interaction.particle2)
-
+            idx1 = interaction.particle1.index
+            idx2 = interaction.particle2.index
+            
             F[idx1] += F1
             F[idx2] += F2
-
-        # DEBUG: Print net force per particle
-        for i, f in enumerate(F):
-            print(f"Particle {i}: Force = {f}")
-
-        return F  # Return the 3D force array directly
+            
+        return F

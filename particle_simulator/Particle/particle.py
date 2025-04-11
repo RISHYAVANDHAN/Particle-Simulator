@@ -25,25 +25,28 @@ class Particle:
         self.v0 = v0
         self.DOF = None  # Will be assigned when added to a system
 
-    @property
-    def index(self):
-        """
-        Returns the particle index in the global array from the first DOF entry.
-        Assumes DOF = [3*i, 3*i+1, 3*i+2]
-        """
-        return self.DOF[0] // 3
-
     def slice(self, arr):
         """
         Extract the 3D vector corresponding to this particle from a global array.
-
+        
         Args:
-            arr (np.ndarray): Array of positions or velocities with shape (n_particles, 3).
-
+            arr (np.ndarray): Array of positions or velocities
+            
         Returns:
-            np.ndarray: The 3D vector (position or velocity) of this particle.
+            np.ndarray: The 3D vector for this particle
         """
-        return arr[self.index]
+        # Check if arr is a flat array (1D) or structured array (2D+)
+        if arr.ndim == 1:
+            # For flat arrays (legacy mode)
+            return arr[self.DOF]
+        else:
+            # For structured arrays where particles are properly indexed
+            return arr[self.index]
+            
+    @property
+    def index(self):
+        """Returns the particle index in the global array"""
+        return self.DOF[0] // 3
 
     def F(self, t, r, v):
         """
