@@ -37,3 +37,10 @@ Desktop.ini
 !requirements.txt
 
 *.egg-info/
+
+#trash
+__pycache__/
+*.pyc
+.vscode/
+*.log
+'
