@@ -24,10 +24,15 @@ def setup_reference_system() -> System:
     # Triangle configuration
     system.add_particles([
         Particle(m, r0=np.array([0, 0, 0])),
-        Particle(m, r0=np.array([0, 1.1 * L, 0])),
-        Particle(m, r0=np.array([1.2 * L, 0, 0]))
+        Particle(m, r0=np.array([0, 1.0 * L, 0])),
+        Particle(m, r0=np.array([0.866025 * L, 0.5 * L, 0.0]))
     ])
-
+    """
+    For equilibrium configuration, the particles are placed at the vertices of an equilateral triangle with side length L. The positions are:
+    Particle(m, r0=np.array([0, 0, 0])),
+    Particle(m, r0=np.array([0, 1.0 * L, 0])),
+    Particle(m, r0=np.array([0.866025 * L, 0.5 * L, 0.0]))
+    """
     system.add_interactions([
         TwoPointInteraction(system.particles[0], system.particles[1], Spring(c, L)),
         TwoPointInteraction(system.particles[1], system.particles[2], Spring(c, L)),
